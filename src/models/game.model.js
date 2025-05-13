@@ -26,26 +26,12 @@ class GameModel {
   }
 
   // Criar um novo game
-  async create(
-    name,
-    rarity,
-    attackPoints,
-    defensePoints,
-    imageUrl,
-    collectionId
-  ) {
-    const novoGame = await prisma.game.create({
-      data: {
-        name,
-        rarity,
-        attackPoints,
-        defensePoints,
-        imageUrl,
-        collectionId: Number(collectionId),
-      },
+  async create(data) {
+    const game = await prisma.game.create({
+      data
     });
 
-    return novaCarta;
+    return game;
   }
 
   // Atualizar uma carta
