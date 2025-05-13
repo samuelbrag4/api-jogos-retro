@@ -3,16 +3,21 @@ import CardModel from "../models/cardModel.js";
 class CardController {
   // GET /cartas
   async getAllCards(req, res) {
-    const page = req.query.page;
+    const raridade = req.query.raridade;
+    const ataque = req.query.ataque;
+    const pagina = req.query.pagina || 1;
+    const limite = req.query.limite || 10;
 
-    console.log("Page:", page);
-
-    const limit = req.query.limit;
-
-    console.log("Limit:", limit);
+    const name = req.query.name;
 
     try {
-      const cartas = await CardModel.findAll();
+      const cartas = await CardModel.findAll(
+        raridade,
+        ataque,
+        pagina,
+        limite,
+        name
+      );
       res.json(cartas);
     } catch (error) {
       console.error("Erro ao buscar as cartas:", error);

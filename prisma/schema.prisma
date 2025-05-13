@@ -20,11 +20,11 @@ model User {
   email    String @unique
   password String
 
-  // Relations
-  records Record[]
-
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  // Relations
+  records Record[]
 
   @@map("users")
 }
@@ -33,10 +33,10 @@ model Record {
   id         String @id @default(cuid())
   userId     Int
   score      Int
-  screenShot String
+  screenshot String
   gameId     String
 
-  //Relations
+  // Relations
   user User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   game Game @relation(fields: [gameId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
@@ -47,11 +47,11 @@ model Record {
 }
 
 model Game {
-  id       String @id @default(cuid())
+  id       String @id @default(uuid())
   name     String
   platform String
 
-  // Relations 
+  // Relations
   records Record[]
 
   createdAt DateTime @default(now())

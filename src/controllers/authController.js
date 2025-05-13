@@ -1,13 +1,12 @@
-import userModel from "../models/userModel.js";
-import bcryptjs from "bcryptjs";
+import UserModel from "../models/userModel.js";
+import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-const { JsonWebTokenError } = jwt;
 
 class AuthController {
-  // Listar Todos os Usuários
+  // Listar todos os usuários
   async getAllUsers(req, res) {
     try {
-      const users = await userModel.findAll();
+      const users = await UserModel.findAll();
       res.json(users);
     } catch (error) {
       console.error("Erro ao listar usuários:", error);
@@ -15,74 +14,73 @@ class AuthController {
     }
   }
 
-  // Registrar Novo Usuário
+  // Registrar novo usuário
   async register(req, res) {
     try {
       const { name, email, password } = req.body;
 
-      // Validação Básica
+      // Validação básica
       if (!name || !email || !password) {
-        return res.status(400).json({
-          error: "Os campos: name, email e password são obrigatórios!!",
-        });
-      }
-
-      // Verificar se o Usuário já Existe
-      const userExists = await userModel.findByEmail(email);
-
-      if (userExists) {
         return res
           .status(400)
-          .json({ error: `O email: "${email}" já está em uso!` });
+          .json({ error: "Os campos nome, email e senha são obrigatórios!" });
       }
 
-      // Hash da Senha
-      const hashedPassword = await bcryptjs.hash(password, 10);
+      // Verificar se o usuário já existe
+      const userExists = await UserModel.findByEmail(email);
+      if (userExists) {
+        return res.status(400).json({ error: "Este email já está em uso!" });
+      }
 
-      // Criação do Objeto do Usuário
+      // Hash da senha
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      // Criar objeto do usuário
       const data = {
         name,
         email,
         password: hashedPassword,
       };
 
-      // Criação do Usuário
-      const user = await userModel.create(data);
+      // Criar usuário
+      const user = await UserModel.create(data);
 
-      return res
-        .status(201)
-        .json({ message: `Usuário ${name} criado com sucesso!`, user });
+      return res.status(201).json({
+        message: "Usuário criado com sucesso!",
+        user,
+      });
     } catch (error) {
-      console.error("Erro ao criar novo usuário:", error);
-      res.status(500).json({ error: `Erro ao criar usuário ${name}` });
+      console.error("Erro ao criar um novo usuário: ", error);
+      res.status(500).json({ error: "Erro ao criar um novo usuário" });
     }
   }
 
   async login(req, res) {
     try {
       const { email, password } = req.body;
-  
-      // Validação Básica
+
+      // Validação básica
       if (!email || !password) {
-        return res.status(400).json({
-          error: "Os campos: email e password são obrigatórios!!",
-        });
+        return res
+          .status(400)
+          .json({ error: "Os campos email e senha são obrigatórios!" });
       }
-  
-      // Verificar se o Usuário Existe
-      const userExists = await userModel.findByEmail(email);
-  
+
+      // Verificar se o usuário existe
+      const userExists = await UserModel.findByEmail(email);
       if (!userExists) {
-        return res.status(401).json({ error: "Credenciais erradas!" });
+        return res.status(401).json({ error: "Credenciais inválidas!" });
       }
-  
-      // Verificar Senha
-      const isPasswordValid = await bcryptjs.compare(password, userExists.password);
-  
+
+      // Verificar senha
+      const isPasswordValid = await bcrypt.compare(
+        password,
+        userExists.password
+      );
       if (!isPasswordValid) {
-        return res.status(401).json({ error: "Credenciais erradas!" });
+        return res.status(401).json({ error: "Credenciais inválidas!" });
       }
-  
+
       // Gerar Token JWT
       const token = jwt.sign(
         {
@@ -90,21 +88,20 @@ class AuthController {
           name: userExists.name,
           email: userExists.email,
         },
-        process.env.JWT_SECRET, // Certifique-se de que JWT_SECRET está definido
+        process.env.JWT_SECRET,
         {
           expiresIn: "24h",
         }
       );
-  
-      // Retornar o token e mensagem de sucesso
+
       return res.json({
-        message: `Olá, ${userExists.name}! Seu login foi realizado com sucesso!`,
+        message: "Login realizado com sucesso!",
         token,
-        user: userExists,
+        userExists,
       });
     } catch (error) {
-      console.error("Erro ao fazer login:", error);
-      res.status(500).json({ error: "Erro ao fazer login" }); // Alterado para 500 Internal Server Error
+      console.error("Erro ao fazer login: ", error);
+      res.status(500).json({ error: "Erro ao fazer login!" });
     }
   }
 }
